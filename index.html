@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Health Advisor | AI Symptom Checker</title>
+    <style>
+      :root {
+        --primary: #2c7da0;
+        --primary-light: #a9d6e5;
+        --secondary: #2a9d8f;
+        --light: #f8f9fa;
+        --dark: #1d3557;
+        --danger: #e76f51;
+        --warning: #f8961e;
+        --success: #52b788;
+        --gray: #e9ecef;
+        --transition: all 0.3s ease;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: #f0f7f9;
+        color: var(--dark);
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--primary-light);
+        margin-bottom: 1rem;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: var(--primary);
+      }
+
+      .logo-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: var(--primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+      }
+
+      .disclaimer-bar {
+        background-color: var(--warning);
+        color: white;
+        padding: 0.5rem;
+        text-align: center;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+      }
+
+      main {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        gap: 1rem;
+      }
+
+      .chat-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 70vh;
+      }
+
+      .chat-header {
+        background-color: var(--primary);
+        color: white;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .chat-title {
+        font-weight: 600;
+      }
+
+      .progress-container {
+        flex: 1;
+        max-width: 200px;
+        height: 8px;
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        height: 100%;
+        width: 0%;
+        background-color: white;
+        transition: var(--transition);
+      }
+
+      .reset-btn {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      .chat-messages {
+        flex: 1;
+        padding: 1rem;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .message {
+        max-width: 80%;
+        padding: 0.75rem 1rem;
+        border-radius: 18px;
+        animation: fadeIn 0.3s ease;
+        position: relative;
+        line-height: 1.5;
+      }
+
+      .bot-message {
+        align-self: flex-start;
+        background-color: var(--gray);
+        border-bottom-left-radius: 4px;
+      }
+
+      .user-message {
+        align-self: flex-end;
+        background-color: var(--primary);
+        color: white;
+        border-bottom-right-radius: 4px;
+      }
+
+      .typing-indicator {
+        display: flex;
+        gap: 0.3rem;
+        padding: 1rem;
+        align-self: flex-start;
+      }
+
+      .typing-dot {
+        width: 8px;
+        height: 8px;
+        background-color: var(--primary);
+        border-radius: 50%;
+        animation: typingAnimation 1.5s infinite ease-in-out;
+      }
+
+      .typing-dot:nth-child(1) {
+        animation-delay: 0s;
+      }
+
+      .typing-dot:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      .typing-dot:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      .quick-replies {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
+
+      .quick-reply-btn {
+        background-color: var(--primary-light);
+        color: var(--dark);
+        border: none;
+        border-radius: 18px;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+
+      .quick-reply-btn:hover {
+        background-color: var(--primary);
+        color: white;
+      }
+
+      .input-container {
+        padding: 1rem;
+        border-top: 1px solid var(--gray);
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .chat-input {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--gray);
+        border-radius: 24px;
+        font-size: 1rem;
+        transition: var(--transition);
+      }
+
+      .chat-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(44, 125, 160, 0.2);
+      }
+
+      .send-btn {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+
+      .send-btn:hover {
+        background-color: var(--dark);
+      }
+
+      .send-btn:disabled {
+        background-color: var(--gray);
+        cursor: not-allowed;
+      }
+
+      .summary-card {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-top: 1rem;
+        display: none;
+      }
+
+      .summary-title {
+        color: var(--primary);
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .summary-section {
+        margin-bottom: 1rem;
+      }
+
+      .summary-section h3 {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+        color: var(--dark);
+      }
+
+      .summary-list {
+        list-style-type: none;
+        padding-left: 1rem;
+      }
+
+      .summary-list li {
+        position: relative;
+        padding-left: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .summary-list li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 8px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--primary);
+      }
+
+      .disease-card {
+        background-color: var(--light);
+        border-left: 4px solid var(--primary);
+        padding: 1rem;
+        margin: 0.5rem 0;
+        border-radius: 4px;
+      }
+
+      .disease-name {
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+      }
+
+      .action-btn {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-top: 1rem;
+      }
+
+      .action-btn:hover {
+        background-color: var(--dark);
+      }
+
+      footer {
+        text-align: center;
+        padding: 1rem 0;
+        color: var(--dark);
+        opacity: 0.7;
+        font-size: 0.9rem;
+        margin-top: 2rem;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes typingAnimation {
+        0% {
+          transform: scale(0.7);
+          opacity: 0.4;
+        }
+        50% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(0.7);
+          opacity: 0.4;
+        }
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .chat-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.5rem;
+        }
+
+        .progress-container {
+          max-width: 100%;
+          width: 100%;
+        }
+
+        .message {
+          max-width: 90%;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .container {
+          padding: 0.5rem;
+        }
+
+        .logo {
+          font-size: 1.2rem;
+        }
+
+        .chat-container {
+          height: 80vh;
+        }
+
+        .message {
+          max-width: 95%;
+          padding: 0.5rem 0.75rem;
+        }
+
+        .quick-reply-btn {
+          padding: 0.4rem 0.75rem;
+          font-size: 0.8rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="logo">
+          <div class="logo-icon">H</div>
+          <span>Health Advisor</span>
+        </div>
+      </header>
+
+      <div class="disclaimer-bar">
+        <strong>Disclaimer:</strong> This chatbot is for informational purposes
+        only and does not provide medical diagnoses. Please consult a healthcare
+        professional for accurate diagnosis and treatment.
+      </div>
+
+      <main>
+        <div class="chat-container">
+          <div class="chat-header">
+            <div class="chat-title">AI Symptom Checker</div>
+            <div class="progress-container">
+              <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <button class="reset-btn" id="resetBtn">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M21 12a9 9 0 0 1-9 9"></path>
+                <path d="M3 12a9 9 0 0 1 9-9"></path>
+                <path d="M21 12c0-4.97-4.03-9-9-9"></path>
+                <path d="M3 12c0 4.97 4.03 9 9 9"></path>
+                <path d="M8 16l4-4-4-4"></path>
+                <path d="M12 12h9"></path>
+              </svg>
+              Reset
+            </button>
+          </div>
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="input-container">
+            <input
+              type="text"
+              class="chat-input"
+              id="chatInput"
+              placeholder="Type your symptoms here..."
+              autocomplete="off"
+            />
+            <button class="send-btn" id="sendBtn">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="summary-card" id="summaryCard">
+          <h2 class="summary-title">Assessment Summary</h2>
+          <div class="summary-section">
+            <h3>Reported Symptoms:</h3>
+            <ul class="summary-list" id="summarySymptoms"></ul>
+          </div>
+          <div class="summary-section">
+            <h3>Potential Conditions:</h3>
+            <div id="summaryDiseases"></div>
+          </div>
+          <div class="summary-section">
+            <h3>Recommendations:</h3>
+            <p>Based on your reported symptoms, it's advisable to:</p>
+            <div id="summaryRecommendations"></div>
+          </div>
+          <button class="action-btn" id="restartBtn">
+            Start New Assessment
+          </button>
+        </div>
+      </main>
+
+      <footer>&copy; 2025 Health Advisor | AI Symptom Checker</footer>
+    </div>
+
+    <script>
+      // Knowledge Base
+      const knowledgeBase = {
+        diseases: [
+          {
+            id: "common_cold",
+            name: "Common Cold",
+            symptoms: [
+              "runny nose",
+              "sneezing",
+              "cough",
+              "sore throat",
+              "mild fever",
+              "congestion",
+            ],
+            matchThreshold: 3,
+            info: "The common cold is a viral infection affecting the upper respiratory tract. It typically resolves within 7-10 days with rest and fluids.",
+            recommendation:
+              "Rest, stay hydrated, and use over-the-counter cold medications for symptom relief. Consult a doctor if symptoms worsen or persist beyond 10 days.",
+          },
+          {
+            id: "flu",
+            name: "Influenza (Flu)",
+            symptoms: [
+              "high fever",
+              "body aches",
+              "fatigue",
+              "headache",
+              "chills",
+              "cough",
+              "sore throat",
+            ],
+            matchThreshold: 4,
+            info: "Influenza is a viral infection that attacks your respiratory system and is more severe than the common cold.",
+            recommendation:
+              "Rest, stay hydrated, and take over-the-counter pain relievers. Contact a healthcare provider, especially if you're at high risk for complications.",
+          },
+          {
+            id: "allergies",
+            name: "Seasonal Allergies",
+            symptoms: [
+              "sneezing",
+              "itchy eyes",
+              "runny nose",
+              "congestion",
+              "watery eyes",
+            ],
+            matchThreshold: 3,
+            info: "Seasonal allergies occur when your immune system overreacts to outdoor allergens like pollen, mold, and dust.",
+            recommendation:
+              "Over-the-counter antihistamines, nasal sprays, and eye drops may help. Consider seeing an allergist if symptoms interfere with daily activities.",
+          },
+          {
+            id: "covid19",
+            name: "COVID-19",
+            symptoms: [
+              "fever",
+              "dry cough",
+              "fatigue",
+              "shortness of breath",
+              "loss of taste or smell",
+              "body aches",
+              "headache",
+            ],
+            matchThreshold: 3,
+            info: "COVID-19 is caused by the SARS-CoV-2 virus and primarily affects the respiratory system, with varying severity.",
+            recommendation:
+              "Self-isolate, get tested, and contact a healthcare provider for guidance. Seek immediate medical attention for severe symptoms like breathing difficulty.",
+          },
+          {
+            id: "migraine",
+            name: "Migraine",
+            symptoms: [
+              "severe headache",
+              "throbbing pain",
+              "nausea",
+              "sensitivity to light",
+              "sensitivity to sound",
+              "vision changes",
+            ],
+            matchThreshold: 3,
+            info: "Migraines are recurring attacks of moderate to severe pain that is throbbing or pulsing and often affects one side of the head.",
+            recommendation:
+              "Rest in a quiet, dark room. Over-the-counter pain relievers may help. Consult a doctor for recurring migraines to discuss preventive treatments.",
+          },
+          {
+            id: "food_poisoning",
+            name: "Food Poisoning",
+            symptoms: [
+              "nausea",
+              "vomiting",
+              "diarrhea",
+              "abdominal cramps",
+              "fever",
+              "headache",
+              "weakness",
+            ],
+            matchThreshold: 4,
+            info: "Food poisoning results from eating contaminated, spoiled, or toxic food and typically includes gastrointestinal symptoms.",
+            recommendation:
+              "Stay hydrated, rest, and avoid solid foods until symptoms improve. Seek medical attention for severe symptoms or if unable to keep fluids down.",
+          },
+          {
+            id: "strep_throat",
+            name: "Strep Throat",
+            symptoms: [
+              "severe sore throat",
+              "pain when swallowing",
+              "fever",
+              "red and swollen tonsils",
+              "tiny red spots on the roof of the mouth",
+              "swollen lymph nodes",
+            ],
+            matchThreshold: 3,
+            info: "Strep throat is a bacterial infection that causes inflammation and pain in the throat.",
+            recommendation:
+              "See a doctor for testing. Antibiotics are typically prescribed if strep is confirmed. Rest and drink warm fluids to soothe throat pain.",
+          },
+          {
+            id: "gastritis",
+            name: "Gastritis",
+            symptoms: [
+              "abdominal pain",
+              "nausea",
+              "vomiting",
+              "feeling of fullness",
+              "indigestion",
+              "loss of appetite",
+            ],
+            matchThreshold: 3,
+            info: "Gastritis is inflammation of the stomach lining, which can be caused by irritation, infection, or autoimmune problems.",
+            recommendation:
+              "Avoid spicy, acidic, or fatty foods. Consider over-the-counter antacids. See a doctor for persistent symptoms for proper diagnosis and treatment.",
+          },
+        ],
+        questions: [
+          {
+            id: "initial",
+            text: "Hi there! I'm your Health Advisor, an AI symptom checker. What symptoms are you experiencing today?",
+            type: "open",
+          },
+          {
+            id: "duration",
+            text: "How long have you been experiencing these symptoms?",
+            options: [
+              "Less than 24 hours",
+              "1-3 days",
+              "4-7 days",
+              "More than a week",
+            ],
+          },
+          {
+            id: "fever",
+            text: "Do you have a fever? If yes, how high is your temperature?",
+            options: [
+              "No fever",
+              "Low grade (below 100.4°F/38°C)",
+              "Moderate (100.4-102.2°F/38-39°C)",
+              "High (above 102.2°F/39°C)",
+              "I don't know",
+            ],
+          },
+          {
+            id: "respiratory",
+            text: "Are you experiencing any respiratory symptoms like cough, shortness of breath, or difficulty breathing?",
+            options: [
+              "No respiratory symptoms",
+              "Mild cough",
+              "Severe cough",
+              "Shortness of breath",
+              "Difficulty breathing",
+            ],
+          },
+          {
+            id: "pain",
+            text: "Are you experiencing any pain? If yes, please describe where and how severe (mild, moderate, severe).",
+            type: "open",
+          },
+          {
+            id: "gi_symptoms",
+            text: "Do you have any digestive or gastrointestinal symptoms?",
+            options: [
+              "No digestive symptoms",
+              "Nausea",
+              "Vomiting",
+              "Diarrhea",
+              "Constipation",
+              "Abdominal pain",
+              "Loss of appetite",
+            ],
+          },
+          {
+            id: "contact",
+            text: "Have you been in contact with anyone who has been sick recently?",
+            options: ["Yes", "No", "Not sure"],
+          },
+          {
+            id: "medical_history",
+            text: "Do you have any pre-existing medical conditions?",
+            type: "open",
+          },
+          {
+            id: "medications",
+            text: "Are you currently taking any medications?",
+            type: "open",
+          },
+          {
+            id: "allergies",
+            text: "Do you have any known allergies (seasonal, food, medication)?",
+            type: "open",
+          },
+        ],
+        symptomKeywords: {
+          fever: ["fever", "temperature", "hot", "chills"],
+          "runny nose": ["runny nose", "nasal discharge", "nose running"],
+          congestion: [
+            "congestion",
+            "stuffy nose",
+            "blocked nose",
+            "nasal congestion",
+          ],
+          sneezing: ["sneezing", "sneeze"],
+          cough: ["cough", "coughing"],
+          "sore throat": ["sore throat", "throat pain", "throat hurt"],
+          headache: ["headache", "head pain", "head ache"],
+          "body aches": [
+            "body aches",
+            "muscle pain",
+            "muscle ache",
+            "aching",
+            "achy",
+          ],
+          fatigue: [
+            "fatigue",
+            "tired",
+            "exhaustion",
+            "exhausted",
+            "low energy",
+          ],
+          "shortness of breath": [
+            "shortness of breath",
+            "hard to breathe",
+            "difficult breathing",
+            "breathless",
+          ],
+          "loss of taste or smell": [
+            "can't taste",
+            "can't smell",
+            "loss of taste",
+            "loss of smell",
+            "no taste",
+            "no smell",
+          ],
+          nausea: ["nausea", "feel sick", "nauseated", "nauseous"],
+          vomiting: ["vomiting", "vomit", "throwing up", "threw up"],
+          diarrhea: ["diarrhea", "loose stool", "watery stool"],
+          "abdominal pain": [
+            "abdominal pain",
+            "stomach pain",
+            "belly pain",
+            "stomach ache",
+          ],
+          rash: ["rash", "skin irritation", "hives", "itchy skin"],
+          "joint pain": ["joint pain", "painful joints", "joint ache"],
+          dizziness: ["dizziness", "dizzy", "lightheaded", "vertigo"],
+          "chest pain": ["chest pain", "pain in chest"],
+          "itchy eyes": ["itchy eyes", "eye itch", "eyes itching"],
+          "watery eyes": ["watery eyes", "teary eyes"],
+          "severe headache": [
+            "severe headache",
+            "bad headache",
+            "intense headache",
+            "terrible headache",
+            "migraine",
+          ],
+          "throbbing pain": [
+            "throbbing pain",
+            "pulsing pain",
+            "throbbing headache",
+          ],
+          "sensitivity to light": [
+            "sensitivity to light",
+            "light hurts eyes",
+            "photosensitivity",
+          ],
+          "sensitivity to sound": ["sensitivity to sound", "noise sensitivity"],
+          "vision changes": [
+            "vision changes",
+            "blurry vision",
+            "spots in vision",
+            "aura",
+          ],
+        },
+      };
+
+      // App State
+      const state = {
+        conversation: [],
+        currentQuestion: 0,
+        reportedSymptoms: new Set(),
+        userResponses: {},
+        assessmentComplete: false,
+        matchedDiseases: [],
+        isTyping: false,
+      };
+
+      // DOM Elements
+      const chatMessages = document.getElementById("chatMessages");
+      const chatInput = document.getElementById("chatInput");
+      const sendBtn = document.getElementById("sendBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      const progressBar = document.getElementById("progressBar");
+      const summaryCard = document.getElementById("summaryCard");
+      const summarySymptoms = document.getElementById("summarySymptoms");
+      const summaryDiseases = document.getElementById("summaryDiseases");
+      const summaryRecommendations = document.getElementById(
+        "summaryRecommendations"
+      );
+      const restartBtn = document.getElementById("restartBtn");
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        initChat();
+        setupEventListeners();
+      });
+
+      function initChat() {
+        state.currentQuestion = 0;
+        state.reportedSymptoms.clear();
+        state.userResponses = {};
+        state.assessmentComplete = false;
+        state.matchedDiseases = [];
+        state.conversation = [];
+
+        chatMessages.innerHTML = "";
+        summaryCard.style.display = "none";
+        updateProgressBar();
+
+        // Add initial message
+        const initialQuestion = knowledgeBase.questions.find(
+          (q) => q.id === "initial"
+        );
+        addBotMessage(initialQuestion.text);
+      }
+
+      function setupEventListeners() {
+        // Send button click
+        sendBtn.addEventListener("click", handleSendMessage);
+
+        // Enter key press
+        chatInput.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            handleSendMessage();
+          }
+        });
+
+        // Input change for button enable/disable
+        chatInput.addEventListener("input", () => {
+          sendBtn.disabled = chatInput.value.trim() === "";
+        });
+
+        // Reset button
+        resetBtn.addEventListener("click", initChat);
+
+        // Restart button
+        restartBtn.addEventListener("click", initChat);
+      }
+
+      function handleSendMessage() {
+        const userInput = chatInput.value.trim();
+
+        if (userInput === "") return;
+
+        // Add user message to chat
+        addUserMessage(userInput);
+        chatInput.value = "";
+        sendBtn.disabled = true;
+
+        // Process user input
+        processUserInput(userInput);
+      }
+
+      function processUserInput(userInput) {
+        // Add to conversation
+        state.conversation.push({
+          role: "user",
+          message: userInput,
+        });
+
+        // If it's the initial symptom question, extract symptoms
+        if (state.currentQuestion === 0) {
+          extractSymptoms(userInput);
+        }
+
+        // Store response
+        const currentQuestionObj =
+          knowledgeBase.questions[state.currentQuestion];
+        state.userResponses[currentQuestionObj.id] = userInput;
+
+        // Move to next question
+        state.currentQuestion++;
+        updateProgressBar();
+
+        // If we have more questions, ask the next one
+        if (state.currentQuestion < knowledgeBase.questions.length) {
+          showTypingIndicator();
+
+          setTimeout(() => {
+            removeTypingIndicator();
+            const nextQuestion = knowledgeBase.questions[state.currentQuestion];
+            addBotMessage(nextQuestion.text, nextQuestion.options);
+          }, 1000 + Math.random() * 500);
+        } else {
+          // Assessment complete
+          completeAssessment();
+        }
+      }
+
+      function extractSymptoms(userInput) {
+        const userInputLower = userInput.toLowerCase();
+
+        // Check each symptom keyword against user input
+        for (const [symptom, keywords] of Object.entries(
+          knowledgeBase.symptomKeywords
+        )) {
+          for (const keyword of keywords) {
+            if (userInputLower.includes(keyword)) {
+              state.reportedSymptoms.add(symptom);
+              break;
+            }
+          }
+        }
+      }
+
+      function completeAssessment() {
+        state.assessmentComplete = true;
+
+        // Show typing indicator
+        showTypingIndicator();
+
+        setTimeout(() => {
+          removeTypingIndicator();
+
+          // Match diseases based on reported symptoms
+          matchDiseases();
+
+          // Generate conclusion message
+          let conclusion =
+            "Based on the symptoms you've reported, here's what I can tell you:";
+          addBotMessage(conclusion);
+
+          showTypingIndicator();
+
+          setTimeout(() => {
+            removeTypingIndicator();
+
+            if (state.matchedDiseases.length === 0) {
+              addBotMessage(
+                "I couldn't identify any specific conditions based on the symptoms you've shared. It could be a mild, temporary condition. If symptoms persist or worsen, please consult a healthcare professional."
+              );
+            } else {
+              let diseaseMessage = "Your symptoms could be consistent with:";
+              addBotMessage(diseaseMessage);
+
+              // Short delay before showing diseases
+              setTimeout(() => {
+                state.matchedDiseases.forEach((disease) => {
+                  const diseaseHtml = `
+                                    <div class="disease-card">
+                                        <div class="disease-name">${disease.name}</div>
+                                        <div>${disease.info}</div>
+                                    </div>
+                                `;
+                  addBotMessage(diseaseHtml, null, true);
+                });
+
+                // Final advice
+                setTimeout(() => {
+                  addBotMessage(
+                    "Remember, this is not a diagnosis. Please consult with a healthcare professional for proper evaluation and treatment. Would you like to see a summary of your assessment?",
+                    ["Yes, show summary", "No, thank you"]
+                  );
+                }, 600);
+              }, 600);
+            }
+          }, 1500);
+        }, 1500);
+      }
+
+      function matchDiseases() {
+        state.matchedDiseases = [];
+
+        // Get array of reported symptoms
+        const reportedSymptomsArray = Array.from(state.reportedSymptoms);
+
+        // Check each disease
+        knowledgeBase.diseases.forEach((disease) => {
+          // Count how many of the disease's symptoms match the reported symptoms
+          let matchCount = 0;
+
+          disease.symptoms.forEach((symptom) => {
+            if (reportedSymptomsArray.includes(symptom)) {
+              matchCount++;
+            }
+          });
+
+          // If enough symptoms match, add to matched diseases
+          if (matchCount >= disease.matchThreshold) {
+            state.matchedDiseases.push(disease);
+          }
+        });
+
+        // Sort by match relevance (could be enhanced with more sophisticated algorithm)
+        state.matchedDiseases.sort((a, b) => {
+          const aMatchCount = a.symptoms.filter((s) =>
+            state.reportedSymptoms.has(s)
+          ).length;
+          const bMatchCount = b.symptoms.filter((s) =>
+            state.reportedSymptoms.has(s)
+          ).length;
+          return bMatchCount - aMatchCount;
+        });
+      }
+
+      function showSummary() {
+        // Populate summary card
+        summarySymptoms.innerHTML = "";
+        Array.from(state.reportedSymptoms).forEach((symptom) => {
+          const li = document.createElement("li");
+          li.textContent = symptom.charAt(0).toUpperCase() + symptom.slice(1);
+          summarySymptoms.appendChild(li);
+        });
+
+        summaryDiseases.innerHTML = "";
+        if (state.matchedDiseases.length === 0) {
+          summaryDiseases.innerHTML =
+            "<p>No specific conditions identified based on reported symptoms.</p>";
+        } else {
+          state.matchedDiseases.forEach((disease) => {
+            const div = document.createElement("div");
+            div.className = "disease-card";
+            div.innerHTML = `
+                        <div class="disease-name">${disease.name}</div>
+                        <div>${disease.info}</div>
+                    `;
+            summaryDiseases.appendChild(div);
+          });
+        }
+
+        summaryRecommendations.innerHTML = "";
+        if (state.matchedDiseases.length === 0) {
+          summaryRecommendations.innerHTML =
+            "<p>Monitor your symptoms. If they persist or worsen, please consult a healthcare professional.</p>";
+        } else {
+          state.matchedDiseases.forEach((disease) => {
+            const p = document.createElement("p");
+            p.innerHTML = `<strong>${disease.name}:</strong> ${disease.recommendation}`;
+            summaryRecommendations.appendChild(p);
+          });
+        }
+
+        // Show summary card
+        summaryCard.style.display = "block";
+
+        // Scroll to summary
+        summaryCard.scrollIntoView({ behavior: "smooth" });
+      }
+
+      function addUserMessage(message) {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = "message user-message";
+        messageDiv.textContent = message;
+
+        chatMessages.appendChild(messageDiv);
+        scrollToBottom();
+      }
+
+      function addBotMessage(message, options = null, isHTML = false) {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = "message bot-message";
+
+        if (isHTML) {
+          messageDiv.innerHTML = message;
+        } else {
+          messageDiv.textContent = message;
+        }
+
+        chatMessages.appendChild(messageDiv);
+
+        // Add quick reply options if provided
+        if (options && options.length > 0) {
+          const quickReplies = document.createElement("div");
+          quickReplies.className = "quick-replies";
+
+          options.forEach((option) => {
+            const button = document.createElement("button");
+            button.className = "quick-reply-btn";
+            button.textContent = option;
+            button.addEventListener("click", () => {
+              // Handle special case for summary
+              if (option === "Yes, show summary") {
+                addUserMessage(option);
+                showSummary();
+                return;
+              }
+
+              addUserMessage(option);
+              processUserInput(option);
+
+              // Remove quick reply buttons after selection
+              quickReplies.remove();
+            });
+
+            quickReplies.appendChild(button);
+          });
+
+          messageDiv.appendChild(quickReplies);
+        }
+
+        // Add to conversation state
+        state.conversation.push({
+          role: "bot",
+          message: isHTML ? "See above message" : message,
+          options: options,
+        });
+
+        scrollToBottom();
+      }
+
+      function showTypingIndicator() {
+        if (state.isTyping) return;
+
+        state.isTyping = true;
+        const typingDiv = document.createElement("div");
+        typingDiv.className = "typing-indicator";
+        typingDiv.id = "typingIndicator";
+
+        for (let i = 0; i < 3; i++) {
+          const dot = document.createElement("div");
+          dot.className = "typing-dot";
+          typingDiv.appendChild(dot);
+        }
+
+        chatMessages.appendChild(typingDiv);
+        scrollToBottom();
+      }
+
+      function removeTypingIndicator() {
+        state.isTyping = false;
+        const typingIndicator = document.getElementById("typingIndicator");
+        if (typingIndicator) {
+          typingIndicator.remove();
+        }
+      }
+
+      function scrollToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      function updateProgressBar() {
+        const totalQuestions = knowledgeBase.questions.length;
+        const progress = (state.currentQuestion / totalQuestions) * 100;
+        progressBar.style.width = `${progress}%`;
+      }
+
+      // Handle quick reply for showing summary
+      document.addEventListener("click", (e) => {
+        if (e.target.classList.contains("quick-reply-btn")) {
+          if (e.target.textContent === "Yes, show summary") {
+            showSummary();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
